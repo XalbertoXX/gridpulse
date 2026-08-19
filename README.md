@@ -1,2 +1,2 @@
-# gridpulse
-Large grid monitoring project
+# Gridpulse
+###Large grid monitoring project
