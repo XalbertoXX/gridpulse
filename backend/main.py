@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from datetime import datetime
 from pydantic import BaseModel
 from sqlmodel import create_engine, SQLModel, Session, select, Field
 from dotenv import load_dotenv
@@ -39,6 +40,26 @@ class Asset(BaseModel):
     location: str
     status: str
 
+#table=true si representa a la tabla real
+class measurement(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    asset_id: int
+    timestamp: datetime 
+    temperature: float | None = None
+    voltage: float | None = None
+    current: float | None = None
+    load_percentage: float | None = None
+    frequency: float | None = None
+
+class create_measure(SQLModel):
+    asset_id: int
+    timestamp: datetime 
+    temperature: float | None = None
+    voltage: float | None = None
+    current: float | None = None
+    load_percentage: float | None = None
+    frequency: float | None = None
+
 app = FastAPI()
 
 # Get Methods
@@ -50,7 +71,7 @@ def health():
 def get_asset():
     with Session(engine) as session:
         statement = select(assets)
-        resultado = session.exec(statement).first()
+        resultado = session.exec(statement)
         return resultado
 
 @app.get("/assets/{item_id}")
@@ -62,7 +83,10 @@ def get_asset_id(item_id: int):
 
 @app.get("/measurements")
 def get_asset():
-    return "Connectivity to db stablished, return things"
+    with Session(engine) as session:
+        statement = select(measurement)
+        resultado = session.exec(statement)
+        return resultado
 
 @app.get("/alerts")
 def get_asset():
@@ -86,9 +110,25 @@ def make_asset(item: create_asset):
 
     return new_asset
 
-@app.post("/measurements")
-def make_asset(item: Asset):
-    return item
+@app.post("/measurements/{item_id}")
+def make_asset(item: measurement):
+    with Session(engine) as session:
+        statement = select(assets).where(assets.id == item.asset_id)
+        resultado = session.exec(statement).first()
+        if resultado != None:
+            new_measurement = measurement(
+
+            )
+            session.add(new_measurement)
+            session.commit()
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
+        
+
+    with Session(engine) as session:
+        statement = select(measurement)
+        resultado = session.exec(statement)
+    return re
 
 # Patch Methods
 @app.patch("/assets/{item_id}")
@@ -101,9 +141,9 @@ def update_asset(item_id: int, asset_update: patch_asset):
             update_data = asset_update.model_dump(exclude_unset=True)
 
             if not update_data:
-                return {"message": "No data has been modified"}
+                raise HTTPException(status_code=404, detail="Item not found")
             
-            for field, value in asset_update.items():
+            for field, value in update_data.items():
                 setattr(resultado, field, value)
 
             session.add(resultado)
@@ -113,7 +153,7 @@ def update_asset(item_id: int, asset_update: patch_asset):
             return resultado
         
         else:
-            return {"message": "No data to be modified"}
+            raise HTTPException(status_code=404, detail="Item not found")
 
 # Delete Methods
 @app.delete("/assets/{item_id}")
@@ -122,9 +162,8 @@ def remove_item(item_id: int):
         statement = select(assets).where(assets.id == item_id)
         resultado = session.exec(statement).first()
         if resultado != None:
-            ass = resultado.one()
-            session.delete(ass)
+            session.delete(resultado)
             session.commit()
             return {"message": "Deleted"}
         else:
-            return {"message": "Nothing to delete"}
+            raise HTTPException(status_code=404, detail="Item not found")
