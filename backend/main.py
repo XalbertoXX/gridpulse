@@ -120,7 +120,7 @@ def update_asset(item_id: int, asset_update: patch_asset):
 def remove_item(item_id: int):
     with Session(engine) as session:
         statement = select(assets).where(assets.id == item_id)
-        resultado = session.exec(statement)
+        resultado = session.exec(statement).first()
         if resultado != None:
             ass = resultado.one()
             session.delete(ass)
