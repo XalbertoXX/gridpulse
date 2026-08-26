@@ -118,4 +118,13 @@ def update_asset(item_id: int, asset_update: patch_asset):
 # Delete Methods
 @app.delete("/assets/{item_id}")
 def remove_item(item_id: int):
-    return "sss"
+    with Session(engine) as session:
+        statement = select(assets).where(assets.id == item_id)
+        resultado = session.exec(statement)
+        if resultado != None:
+            ass = resultado.one()
+            session.delete(ass)
+            session.commit()
+            return {"message": "Deleted"}
+        else:
+            return {"message": "Nothing to delete"}
