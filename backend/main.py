@@ -113,7 +113,7 @@ def make_asset(item: create_asset):
 @app.post("/measurements/{item_id}")
 def make_asset(item: measurement):
     with Session(engine) as session:
-        statement = select(assets).where(assets.id == item.asset_id)
+        statement = select(measurement).where(measurement.id == item.asset_id)
         resultado = session.exec(statement).first()
         if resultado != None:
             new_measurement = measurement(
@@ -160,6 +160,18 @@ def update_asset(item_id: int, asset_update: patch_asset):
 def remove_item(item_id: int):
     with Session(engine) as session:
         statement = select(assets).where(assets.id == item_id)
+        resultado = session.exec(statement).first()
+        if resultado != None:
+            session.delete(resultado)
+            session.commit()
+            return {"message": "Deleted"}
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+@app.delete("/measurements/{item_id}")
+def remove_item(item_id: int):
+    with Session(engine) as session:
+        statement = select(measurement).where(measurement.asset_id == item_id)
         resultado = session.exec(statement).first()
         if resultado != None:
             session.delete(resultado)
