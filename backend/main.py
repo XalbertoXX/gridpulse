@@ -129,12 +129,6 @@ def make_asset(item: measurement):
             session.commit()
         else:
             raise HTTPException(status_code=404, detail="Item not found")
-        
-
-    with Session(engine) as session:
-        statement = select(measurement)
-        resultado = session.exec(statement)
-    return re
 
 # Patch Methods
 @app.patch("/assets/{item_id}")
