@@ -113,11 +113,17 @@ def make_asset(item: create_asset):
 @app.post("/measurements/{item_id}")
 def make_asset(item: measurement):
     with Session(engine) as session:
-        statement = select(measurement).where(measurement.id == item.asset_id)
+        statement = select(assets).where(assets.id == item.asset_id)
         resultado = session.exec(statement).first()
         if resultado != None:
             new_measurement = measurement(
-
+                asset_id=item.asset_id,
+                timestamp=datetime,
+                temperature=item.temperature,
+                voltage=item.voltage,
+                current=item.current,
+                load_percentage=item.load_percentage,
+                frequency=item.frequency
             )
             session.add(new_measurement)
             session.commit()
@@ -171,7 +177,7 @@ def remove_item(item_id: int):
 @app.delete("/measurements/{item_id}")
 def remove_item(item_id: int):
     with Session(engine) as session:
-        statement = select(measurement).where(measurement.asset_id == item_id)
+        statement = select(measurement).where(measurement.asset_id == id)
         resultado = session.exec(statement).first()
         if resultado != None:
             session.delete(resultado)
